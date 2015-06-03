@@ -96,9 +96,24 @@ class ParserEngine {
         final String mQualifier
         final MarkupBuilder mBuilder
 
-        XMLBuilder(String qualifier) {
+        private String getStringDirName(String qualifier) {
             def defaultValues = qualifier == mConfig.defaultColumnName
-            String valuesDirName = defaultValues ? 'values' : 'values-' + qualifier
+            String valuesDirName;
+            if (defaultValues) {
+                valuesDirName = "values";
+            } else {
+                def split = qualifier.split("_")
+                //zh-rCN
+                def s = split.length == 2 ? split[0].toLowerCase() + "-" + "r" +
+                        split[1].toUpperCase() : qualifier.toLowerCase()
+                valuesDirName = "values" + "-" + s
+            }
+            valuesDirName
+        }
+
+        XMLBuilder(String qualifier) {
+            String valuesDirName = getStringDirName(qualifier)
+
             File valuesDir = new File(mResDir, valuesDirName)
             if (!valuesDir.isDirectory()) {
                 valuesDir.mkdirs()
@@ -117,7 +132,9 @@ class ParserEngine {
 
         def addResource(body) {
             if (mQualifier == mConfig.defaultColumnName && mConfig.defaultLocaleQualifier != null)
-                mBuilder.resources(body, 'xmlns:tools': 'http://schemas.android.com/tools', 'tools:locale': mConfig.defaultLocaleQualifier)
+                mBuilder.resources(body
+                        , 'xmlns:tools': 'http://schemas.android.com/tools'
+                        , 'tools:locale': mConfig.defaultLocaleQualifier)
             else
                 mBuilder.resources(body)
         }
