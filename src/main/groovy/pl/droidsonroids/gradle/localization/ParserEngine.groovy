@@ -144,19 +144,8 @@ class ParserEngine {
         mCloseableInput.withCloseable {
             String[][] allCells = mParser.getAllValues()
             def header = parseHeader(allCells[0])
-            parseCells(header, getContent(allCells))
+            parseCells(header, allCells)
         }
-    }
-
-    private String[][] getContent(String[][] all){
-        String[][] result = new String[all.length - 1][];
-        for (int i = 1; i < all.length; i++) {
-            result[i - 1] = new String[all[i].length];
-            for (int j = 0; j < all[i].length; j++) {
-                result[i - 1][j] =  all[i][j];
-            }
-        }
-        return result;
     }
 
     private parseCells(final SourceInfo sourceInfo, String[][] cells) throws IOException {
