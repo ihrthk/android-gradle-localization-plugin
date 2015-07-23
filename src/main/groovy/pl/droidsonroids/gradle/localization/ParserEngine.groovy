@@ -223,18 +223,7 @@ class ParserEngine {
                         if (!translatable && !mConfig.allowNonTranslatableTranslation && builder.mQualifier != mConfig.defaultColumnName)
                             throw new IOException(name + " is translated but marked translatable='false', row #" + (i + 1))
                     }
-                    if (mConfig.escapeSlashes)
-                        value = value.replace("\\", "\\\\")
-                    if (mConfig.escapeApostrophes)
-                        value = value.replace("'", "\\'")
-                    if (mConfig.escapeQuotes) //TODO don't escape tag attribute values
-                        value = value.replace("\"", "\\\"")
-                    if (mConfig.escapeNewLines)
-                        value = value.replace("\n", "\\n")
-//                    if (value.startsWith(' ') || value.endsWith(' '))
-//                        value = '"' + value + '"'
-                    if (mConfig.convertTripleDotsToHorizontalEllipsis)
-                        value = value.replace("...", "…")
+                    value = handleEscape(value)
 //                    value = value.replace("?", "\\?")
                     if (mConfig.normalizationForm)
                         value = Normalizer.normalize(value, mConfig.normalizationForm)
@@ -274,32 +263,54 @@ class ParserEngine {
                         mkp.comment(comment)
                     }
                 }
-                for (Map.Entry<String, HashSet<PluralItem>> entry : pluralsMap) {
-                    plurals([name: entry.key]) {
-                        if (entry.value.isEmpty())
-                            throw new IOException("At least one quantity string must be defined for key: "
-                                    + entry.key + ", qualifier " + builder.mQualifier)
-                        for (PluralItem quantityEntry : entry.value) {
-                            item(quantity: quantityEntry.quantity) {
-                                yieldValue(mkp, quantityEntry.value)
-                            }
-                            if (quantityEntry.comment)
-                                mkp.comment(quantityEntry.comment)
-                        }
-                    }
-                }
-                for (Map.Entry<String, List<StringArrayItem>> entry : arrays) {
-                    'string-array'([name: entry.key, translatable: translatableArrays[entry.key] ? null : 'false']) {
-                        for (StringArrayItem stringArrayItem : entry.value) {
-                            item {
-                                yieldValue(mkp, stringArrayItem.value)
-                            }
-                            if (stringArrayItem.comment)
-                                mkp.comment(stringArrayItem.comment)
-                        }
-                    }
-                }
+                writePluralsArrays(pluralsMap, arrays)
             });
+        }
+    }
+
+    private String handleEscape(String value) {
+        if (mConfig.escapeSlashes)
+            value = value.replace("\\", "\\\\")
+        if (mConfig.escapeApostrophes)
+            value = value.replace("'", "\\'")
+        if (mConfig.escapeQuotes) //TODO don't escape tag attribute values
+            value = value.replace("\"", "\\\"")
+        if (mConfig.escapeNewLines)
+            value = value.replace("\n", "\\n")
+//                    if (value.startsWith(' ') || value.endsWith(' '))
+//                        value = '"' + value + '"'
+        if (mConfig.convertTripleDotsToHorizontalEllipsis)
+            value = value.replace("...", "…")
+        value
+    }
+
+    private void writePluralsArrays(HashMap<String, HashSet<PluralItem>> pluralsMap,
+                                     HashMap<String, List<StringArrayItem>> arrays) {
+        HashMap<String, Boolean> translatableArrays
+        for (Map.Entry<String, HashSet<PluralItem>> entry : pluralsMap) {
+            plurals([name: entry.key]) {
+                if (entry.value.isEmpty())
+                    throw new IOException("At least one quantity string must be defined for key: "
+                            + entry.key + ", qualifier " + builder.mQualifier)
+                for (PluralItem quantityEntry : entry.value) {
+                    item(quantity: quantityEntry.quantity) {
+                        yieldValue(mkp, quantityEntry.value)
+                    }
+                    if (quantityEntry.comment)
+                        mkp.comment(quantityEntry.comment)
+                }
+            }
+        }
+        for (Map.Entry<String, List<StringArrayItem>> entry : arrays) {
+            'string-array'([name: entry.key, translatable: translatableArrays[entry.key] ? null : 'false']) {
+                for (StringArrayItem stringArrayItem : entry.value) {
+                    item {
+                        yieldValue(mkp, stringArrayItem.value)
+                    }
+                    if (stringArrayItem.comment)
+                        mkp.comment(stringArrayItem.comment)
+                }
+            }
         }
     }
 
