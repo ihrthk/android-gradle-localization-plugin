@@ -269,6 +269,11 @@ class ParserEngine {
     }
 
     private String handleEscape(String value) {
+//        "     (&#34; or &quot;)
+//        '     (&#39; or &apos;)
+//        &     (&#38; or &amp;)
+//        lt(<) (&#60; or &lt;)
+//        gt(>) (&#62; or &gt;)
         if (mConfig.escapeSlashes)
             value = value.replace("\\", "\\\\")
         if (mConfig.escapeApostrophes)
@@ -279,6 +284,9 @@ class ParserEngine {
             value = value.replace("\n", "\\n")
 //                    if (value.startsWith(' ') || value.endsWith(' '))
 //                        value = '"' + value + '"'
+        value = value.replace("&", "&amp;")
+        value = value.replace("<", "&lt;")
+        value = value.replace(">", "&gt;")
         if (mConfig.convertTripleDotsToHorizontalEllipsis)
             value = value.replace("...", "…")
         value
